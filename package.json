@@ -1,0 +1,12 @@
+{
+  "dependencies": {
+    "@types/d3": "^6.3.0",
+    "@types/node": "^15.0.1",
+    "d3": "^6.7.0",
+    "jsnetworkx": "^0.3.4",
+    "tailwindcss": "^2.1.2"
+  },
+  "devDependencies": {
+    "ts-node": "^9.1.1"
+  }
+}
