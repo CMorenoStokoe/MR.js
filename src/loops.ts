@@ -1,24 +1,24 @@
 import * as jsnx from 'jsnetworkx';
-import {Edge, Node} from '../@types/index';
+import {Edge, Node, JsnxEdge} from '../@types/index';
 
 // Find loops from graph
-export const identifyAndRemoveLoops = (G:jsnx.classes.DiGraph, root:Node):Edge[] => {
-    const queue:Node[] = [root];
-    const loops:Edge[] = [];
+export const identifyAndRemoveLoops = (G:jsnx.classes.DiGraph, root:Node["id"]):JsnxEdge[] => {
+    const queue:Node["id"][] = [root];
+    const loops:JsnxEdge[] = [];
 
     // Use colors to keep track of visited nodes (white = not visited, grey = visiting, black = visited)
-    const color:Record<Node, string> = {}; 
+    const color:Record<Node["id"], string> = {}; 
     
     // Run traversal
     search(queue[0]); 
 
     // Get successors of node
-    function search(node:Node){ 
+    function search(node:Node["id"]){ 
 
         // Color node as visiting
         color[node] = 'grey';
         
-        const successors:Node[] = G.successors(node);
+        const successors:Node["id"][] = G.successors(node);
         for (const successor of successors){
 
             if(color[successor]==='grey'){ 

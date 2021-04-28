@@ -1,18 +1,15 @@
-import { Node, NodeWithValue, Path, Step, Summary } from '../@types/index';
+import { Intervention, Node, Step, Edge } from '../@types/index';
 
-export const propagate = (path:Path, origin:Node, valueChange:number):{
-    individualSteps: Step[],
-    summary: Summary
-} => {
+export const propagate = (path:Edge[], origin:Node["id"], valueChange:number):Intervention => {
     const individualSteps:Step[] = [];
-    const summary = {};
-    summary[origin] = valueChange; // Effect of intervention on origin
+    const results = {};
+    results[origin] = valueChange; // Effect of intervention on origin
 
     for(const edge of path){
 
         // Two-step MR
-        const beta = edge.b;
-        const deltaX = summary[edge.source];
+        const beta = edge.beta;
+        const deltaX = results[edge.source];
         const deltaY = deltaX * beta;
 
         // Save individual step to history
@@ -25,15 +22,16 @@ export const propagate = (path:Path, origin:Node, valueChange:number):{
         })
 
         // Update total changes
-        if(summary[edge.target]){
-            summary[edge.target]+=deltaY
+        if(results[edge.target]){
+            results[edge.target]+=deltaY
         }else{
-            summary[edge.target]=deltaY
+            results[edge.target]=deltaY
         }
     }
 
     return ({
-        individualSteps: individualSteps,
-        summary: summary
+        origin: origin,
+        steps: individualSteps,
+        results: results
     })
 };
