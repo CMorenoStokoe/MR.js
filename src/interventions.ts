@@ -2,6 +2,7 @@ import * as jsnx from 'jsnetworkx';
 import {Intervention, JsnxNode, Node} from '../@types/index';
 import {propagate} from '../src/propagation';
 import {calculatePropagationPath} from '../src/traversal';
+import { identifyAndRemoveLoops } from './loops';
 
 export const calculateAllInterventionEffects = (G:jsnx.classes.DiGraph, deltas?:Node[]):Intervention[] => {
     const defaultDelta = 1;
@@ -14,10 +15,12 @@ export const calculateAllInterventionEffects = (G:jsnx.classes.DiGraph, deltas?:
 
         // Use intervention delta provided or default 
         const ds:Node[] = deltas ? deltas.filter(x => x[0] === id) : [];
-        const d:number = ds.length===1 ? ds[0][1].value : defaultDelta;
+        const d:number = ds.length===1 ? ds[0][1].delta : defaultDelta;
 
         // Simulate intervention on every node
-        const path = calculatePropagationPath(G, id);
+        const g = G;
+        identifyAndRemoveLoops(g, id);
+        const path = calculatePropagationPath(g, id);
         allInterventionEffects.push( 
             propagate(path, id, d)
         );

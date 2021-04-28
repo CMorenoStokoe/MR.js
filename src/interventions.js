@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.sortInterventions = exports.calculateAllInterventionEffects = void 0;
 const propagation_1 = require("../src/propagation");
 const traversal_1 = require("../src/traversal");
+const loops_1 = require("./loops");
 const calculateAllInterventionEffects = (G, deltas) => {
     const defaultDelta = 1;
     const allNodesInG = G.nodes(true);
@@ -11,9 +12,11 @@ const calculateAllInterventionEffects = (G, deltas) => {
         const id = node[0];
         // Use intervention delta provided or default 
         const ds = deltas ? deltas.filter(x => x[0] === id) : [];
-        const d = ds.length === 1 ? ds[0][1].value : defaultDelta;
+        const d = ds.length === 1 ? ds[0][1].delta : defaultDelta;
         // Simulate intervention on every node
-        const path = traversal_1.calculatePropagationPath(G, id);
+        const g = G;
+        loops_1.identifyAndRemoveLoops(g, id);
+        const path = traversal_1.calculatePropagationPath(g, id);
         allInterventionEffects.push(propagation_1.propagate(path, id, d));
     }
     return allInterventionEffects;
