@@ -6,26 +6,44 @@ const loops_1 = require("./loops");
 const traversal_1 = require("./traversal");
 const propagation_1 = require("./propagation");
 const interventions_1 = require("./interventions");
-const simulateIntervention = (nodes, edges, origin, delta) => {
+const simulateIntervention = (edges, origin, delta, nodes) => {
     // Prepare data
-    var G = format_1.formatData(nodes, edges);
+    const G = format_1.formatData(edges, nodes);
     loops_1.identifyAndRemoveLoops(G, origin);
     // Simulate intervention
     const path = traversal_1.calculatePropagationPath(G, origin);
     return propagation_1.propagate(path, origin, delta ? delta : 1);
 };
 exports.simulateIntervention = simulateIntervention;
-const simulateEverything = (nodes, edges, deltasInNodeData) => {
+const simulateEverything = (edges, nodes, deltasInNodeData, valenceInNodeData) => {
     // Prepare data
-    var G = format_1.formatData(nodes, edges);
+    const G = format_1.formatData(edges, nodes);
     // Simulate all interventions
-    return interventions_1.calculateAllInterventionEffects(G, deltasInNodeData ? nodes : undefined);
+    const is = interventions_1.calculateAllInterventionEffects(G, deltasInNodeData ? nodes : undefined);
+    /* Sort interventions by effectiveness */
+    // By overall effects
+    const sortedBySumOfEffects = interventions_1.sortInterventions(is, { sumOfEffects: true });
+    // By goodness of effects
+    let sortedByBestEffects = [];
+    if (valenceInNodeData) {
+        sortedByBestEffects = interventions_1.sortInterventions(is, {
+            bestEffects: G.nodes(true),
+        });
+    }
+    // By effect on specific node
+    const sortedByEffectOnNode = [];
+    G.nodes().forEach((e) => sortedByEffectOnNode.push({
+        node: e[0],
+        ranks: interventions_1.sortInterventions(is, { effectOnNode: e[0] }),
+    }));
+    return {
+        unsorted: is,
+        sorted: {
+            bySumOfEffects: sortedBySumOfEffects,
+            byEffectOnNodes: sortedByEffectOnNode,
+            byBestEffects: sortedByBestEffects,
+        },
+    };
 };
 exports.simulateEverything = simulateEverything;
-/*
-    const calculateOptimalIntervention = () => {}
-    const sortedBySumOfEffects = sortInterventions(allPossibleInterventions, {sumOfEffects: true});
-    const sortedByEffectOnNode = sortInterventions(allPossibleInterventions, {effectOnNode: 'D'});
-    const sortedByBestEffects = sortInterventions(allPossibleInterventions, {bestEffects: G.nodes(true)});
-*/ 
 //# sourceMappingURL=index.js.map

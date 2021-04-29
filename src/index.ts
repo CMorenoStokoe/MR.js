@@ -1,30 +1,83 @@
 import * as jsnx from 'jsnetworkx';
-import {Node, Edge} from '../@types/index';
-import {formatData} from './format';
-import {identifyAndRemoveLoops} from './loops'
-import {calculatePropagationPath} from './traversal';
-import {propagate} from './propagation';
-import {calculateAllInterventionEffects, sortInterventions} from './interventions';
+import { Node, Edge, Intervention, JsnxNode } from '../@types/index';
+import { formatData } from './format';
+import { identifyAndRemoveLoops } from './loops';
+import { calculatePropagationPath } from './traversal';
+import { propagate } from './propagation';
+import {
+    calculateAllInterventionEffects,
+    sortInterventions,
+} from './interventions';
 
-export const simulateIntervention = (nodes:Node[], edges:Edge[], origin:Node["id"], delta?:number) => {
+export const simulateIntervention = (
+    edges: Edge[],
+    origin: Node['id'],
+    delta?: number,
+    nodes?: Node[]
+): Intervention => {
     // Prepare data
-    var G:jsnx.classes.DiGraph = formatData(nodes, edges);
+    const G: jsnx.classes.DiGraph = formatData(edges, nodes);
     identifyAndRemoveLoops(G, origin);
     // Simulate intervention
     const path = calculatePropagationPath(G, origin);
     return propagate(path, origin, delta ? delta : 1);
-}
+};
 
-export const simulateEverything = (nodes:Node[], edges:Edge[], deltasInNodeData?:boolean) => {
+export const simulateEverything = (
+    edges: Edge[],
+    nodes?: Node[],
+    deltasInNodeData?: boolean,
+    valenceInNodeData?: boolean
+): {
+    unsorted: Intervention[];
+    sorted: {
+        bySumOfEffects: Intervention[];
+        byEffectOnNodes: {
+            node: Node['id'];
+            ranks: Intervention[];
+        }[];
+        byBestEffects: Intervention[];
+    };
+} => {
     // Prepare data
-    var G:jsnx.classes.DiGraph = formatData(nodes, edges);
-    // Simulate all interventions
-    return calculateAllInterventionEffects(G, deltasInNodeData ? nodes : undefined );
-}
+    const G: jsnx.classes.DiGraph = formatData(edges, nodes);
 
-/*
-    const calculateOptimalIntervention = () => {}
-    const sortedBySumOfEffects = sortInterventions(allPossibleInterventions, {sumOfEffects: true});
-    const sortedByEffectOnNode = sortInterventions(allPossibleInterventions, {effectOnNode: 'D'});
-    const sortedByBestEffects = sortInterventions(allPossibleInterventions, {bestEffects: G.nodes(true)});
-*/
+    // Simulate all interventions
+    const is = calculateAllInterventionEffects(
+        G,
+        deltasInNodeData ? nodes : undefined
+    );
+
+    /* Sort interventions by effectiveness */
+    // By overall effects
+    const sortedBySumOfEffects = sortInterventions(is, { sumOfEffects: true });
+
+    // By goodness of effects
+    let sortedByBestEffects = [];
+    if (valenceInNodeData) {
+        sortedByBestEffects = sortInterventions(is, {
+            bestEffects: G.nodes(true),
+        });
+    }
+
+    // By effect on specific node
+    const sortedByEffectOnNode: {
+        node: Node['id'];
+        ranks: Intervention[];
+    }[] = [];
+    G.nodes().forEach((e: JsnxNode) =>
+        sortedByEffectOnNode.push({
+            node: e[0],
+            ranks: sortInterventions(is, { effectOnNode: e[0] }),
+        })
+    );
+
+    return {
+        unsorted: is,
+        sorted: {
+            bySumOfEffects: sortedBySumOfEffects,
+            byEffectOnNodes: sortedByEffectOnNode,
+            byBestEffects: sortedByBestEffects,
+        },
+    };
+};

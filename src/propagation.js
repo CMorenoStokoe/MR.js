@@ -16,7 +16,7 @@ const propagate = (path, origin, valueChange) => {
             deltaX: deltaX,
             target: edge.target,
             beta: beta,
-            deltaY: deltaY
+            deltaY: deltaY,
         });
         // Update total changes
         if (results[edge.target]) {
@@ -26,11 +26,11 @@ const propagate = (path, origin, valueChange) => {
             results[edge.target] = deltaY;
         }
     }
-    return ({
+    return {
         origin: origin,
         steps: individualSteps,
-        results: results
-    });
+        results: results,
+    };
 };
 exports.propagate = propagate;
 //# sourceMappingURL=propagation.js.map

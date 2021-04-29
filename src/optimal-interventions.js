@@ -11,74 +11,82 @@ The main script calls this to calculate optimal interventions.
 
 */
 
-
 /* Main */
 
 // Create EvE algorithm data object
-function createEvE(){
-
+function createEvE() {
     // Return data class object
     return new EvEData();
-
 }
 
 // Initialise algorithm
-function initialiseEvE(gameData){
-    
+function initialiseEvE(gameData) {
     // Calculate the effects of all possible interventions
     return propagateEvE(gameData);
-
 }
 
 // Calculate optimal intervention
-function calcOptimalIntervention(gameData, EvE, n=5){ // EvE = results from all possible interventions
+function calcOptimalIntervention(gameData, EvE, n = 5) {
+    // EvE = results from all possible interventions
     var topInterventions = [];
 
     // Run calculation
-    calculate(); 
+    calculate();
     return topInterventions;
 
     // Begin series of intervention calculations (using callbacks to  prevent pileup errors)
-    function calculate(){ 
-
+    function calculate() {
         // Identify most effective intervention
-        const optimalIntervention = identifyOptimalIntervention(gameData, topInterventions, EvE);
-            if(optimalIntervention.id == null){return}
+        const optimalIntervention = identifyOptimalIntervention(
+            gameData,
+            topInterventions,
+            EvE
+        );
+        if (optimalIntervention.id == null) {
+            return;
+        }
 
         // Add to list of results
-        topInterventions.push(optimalIntervention)
+        topInterventions.push(optimalIntervention);
 
         // Increment count and callback if not yet complete
-        n --;
-        if(n > 0){calculate()}
-    }    
+        n--;
+        if (n > 0) {
+            calculate();
+        }
+    }
 }
-
 
 /* Calculations */
 
-
 // Identify most effective intervention(s) to most beneficially affect objective trait
-function identifyOptimalIntervention(gameData, topInterventions, EvE){
-    var optimalIntervention = {id: null, objectiveEffect: 0};
+function identifyOptimalIntervention(gameData, topInterventions, EvE) {
+    var optimalIntervention = { id: null, objectiveEffect: 0 };
 
     // Get variables
     const objectiveId = gameData.objective.id;
     const nodes = gameData.nodes;
-    
+
     // Get most effective interventions
-    for(const [id, effects] of Object.entries(EvE)){
-        
+    for (const [id, effects] of Object.entries(EvE)) {
         // Exclusion criteria
         var skip = false;
 
-            // Is the objective
-            if(id == objectiveId){skip = true;}
+        // Is the objective
+        if (id == objectiveId) {
+            skip = true;
+        }
 
-            // Is already in the list
-            for(const intervention of topInterventions){ if (id == intervention.id){ skip = true }; };
+        // Is already in the list
+        for (const intervention of topInterventions) {
+            if (id == intervention.id) {
+                skip = true;
+            }
+        }
 
-        if(skip){continue;}
+        if (skip) {
+            continue;
+        }
 
         // Extract results and path for intervention
         const results = effects.results;
@@ -87,29 +95,34 @@ function identifyOptimalIntervention(gameData, topInterventions, EvE){
 
         // Determine effect on objective
 
-            // Get effects on objective
-            const bestEffect = optimalIntervention.objectiveEffect;
-            const thisEffect = results[objectiveId];
+        // Get effects on objective
+        const bestEffect = optimalIntervention.objectiveEffect;
+        const thisEffect = results[objectiveId];
 
-            // Determine if best intervention
-            const bestIntervention = interventionIsBetter(objective, thisEffect, bestEffect);
-                if(bestIntervention){
-                    optimalIntervention = {id: id, objectiveEffect: thisEffect};
-                }
-    }    
+        // Determine if best intervention
+        const bestIntervention = interventionIsBetter(
+            objective,
+            thisEffect,
+            bestEffect
+        );
+        if (bestIntervention) {
+            optimalIntervention = { id: id, objectiveEffect: thisEffect };
+        }
+    }
 
     return optimalIntervention;
 }
 
 // Calculate intervention effectiveness
-function interventionIsBetter(objective, effect1, effect2){
-    if(effect1 == undefined){return false}; // Ignore interventions with no effect on objective
+function interventionIsBetter(objective, effect1, effect2) {
+    if (effect1 == undefined) {
+        return false;
+    } // Ignore interventions with no effect on objective
 
     // Compare beneficial effects on objective
-    if(objective.isGood){
+    if (objective.isGood) {
         return effect1 > effect2; // Compare intervention effects
-    }
-    else { 
+    } else {
         return effect1 < effect2;
     }
 }

@@ -24,7 +24,6 @@ const identifyAndRemoveLoops = (G, root) => {
                 search(successor);
             }
         }
-        ;
         // Once done, color node as visited
         color[node] = 'black';
     }

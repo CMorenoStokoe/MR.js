@@ -19,7 +19,7 @@ const calculatePropagationPath = (G, root) => {
             const beta = G.getEdgeData(queue[0], successor).beta;
             // Add edge to search path
             // Add node to search path (if not already queued)
-            if (path.filter(item => item.source == queue[0] && item.target == successor).length == 0) {
+            if (path.filter((item) => item.source == queue[0] && item.target == successor).length == 0) {
                 path.push({ source: queue[0], target: successor, beta: beta });
             }
             // Add to queue
